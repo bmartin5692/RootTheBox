@@ -65,11 +65,19 @@ class EventManager(object):
 
     def remove_connection(self, connection):
         """Remove connection"""
-        if connection.team_id is None or connection.user_id is None:
-            self.public_connections.remove(connection)
-        else:
-            team_connections = self.auth_connections[connection.team_id]
-            team_connections[connection.user_id].remove(connection)
+        try:
+            if connection.team_id is None or connection.user_id is None:
+                self.public_connections.remove(connection)
+            else:
+                team_connections = self.auth_connections.get(connection.team_id, None)
+                if team_connections:
+                    user_conn = team_connections.get(connection.user_id, None)
+                    if user_conn:
+                        if connection in user_conn:
+                            user_conn.remove(connection)
+
+        except Exception as ex:
+            logging.exception(ex)
 
     def deauth(self, user):
         """Send a deauth message to a user's client(s)"""
